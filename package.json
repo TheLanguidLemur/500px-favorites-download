@@ -1,0 +1,20 @@
+{
+  "author": {
+    "email": "Maxim.Baz@z0rch.com",
+    "name": "Maxim Baz",
+    "url": "http://z0rch.com"
+  },
+  "dependencies": {
+    "async": "*",
+    "http-get": "*",
+    "lodash": "*"
+  },
+  "description": "Downloader of user's favorite images from 500px.com - EDUCATION PURPOSES ONLY",
+  "name": "500px-favorites-download",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/z0rch/500px-favorites-download.git"
+  },
+  "version": "0.0.1"
+}
