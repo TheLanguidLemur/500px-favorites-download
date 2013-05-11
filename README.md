@@ -11,7 +11,7 @@ Usage
 
 ### 1. Clone the git repo
 
-<code>> git clone github.com/z0rch/500px-favorites-download</code>
+<code>> git clone git://github.com/z0rch/500px-favorites-download.git</code>
 
 ### 2. Configure the script
 

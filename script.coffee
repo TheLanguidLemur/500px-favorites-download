@@ -11,7 +11,7 @@ fs = require 'fs'
 
 start = ->
     unless fs.existsSync savePath
-        return console.log "Destination path does not exists, please check configuration"
+        return util.debug "Destination path does not exists, please check configuration"
 
     process = (callback) -> async.waterfall [
         fetch
@@ -39,7 +39,7 @@ fetch = (callback) ->
         res.on "data", (chunk) -> response += chunk.toString()
         res.on "end", -> callback null, response
 
-    req.on "error", _.partialRight "Fetching error", callback
+    req.on "error", _.partialRight handle, "Fetching error", callback
 
 
 parse = (response, callback) ->
@@ -87,11 +87,12 @@ fetchNude = (img, callback) ->
             catch err
                 handle err, "Fetch nude error", callback
 
-    req.on "error", _.partialRight "Downloading nude error", callback
+    req.on "error", _.partialRight handle, "Downloading nude error", callback
+
 
 handle = (err, where, callback) ->
-    console.log where
-    console.log err
+    util.debug where
+    util.debug util.inspect err
     callback err
 
 

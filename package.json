@@ -9,12 +9,12 @@
     "http-get": "*",
     "lodash": "*"
   },
-  "description": "Downloader of user's favorite images from 500px.com - EDUCATION PURPOSES ONLY",
+  "description": "Tiny script for those of you who want to download favorite photos from 500px.com",
   "name": "500px-favorites-download",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "http://github.com/z0rch/500px-favorites-download.git"
+    "url": "git://github.com/z0rch/500px-favorites-download.git"
   },
-  "version": "0.0.1"
+  "version": "0.0.2"
 }
