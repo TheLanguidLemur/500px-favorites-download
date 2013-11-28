@@ -1,10 +1,11 @@
-_ = require 'lodash'
-http = require 'http'
-util = require 'util'
-async = require 'async'
+_      = require 'lodash'
+http   = require 'http'
+util   = require 'util'
+async  = require 'async'
 images = require 'http-get'
-path = require 'path'
-fs = require 'fs'
+jsdom  = require 'jsdom'
+path   = require 'path'
+fs     = require 'fs'
 
 [username, savePath] = ["z0rch", "D:\\Dropbox\\Photos\\500px favorites"]
 [fetchedPages, totalPages, photos, total] = [0, null, [], 0]
@@ -17,6 +18,7 @@ start = ->
         fetch
         parse
         findLinks
+        findNudeLinks
         download
     ], callback
 
@@ -32,6 +34,29 @@ makeOptions = (page) ->
         headers:
             Accept: "application/json"
 
+
+isValid = (url) ->
+    regex = /^(https?:\/\/)?[\w\d-+_=&?#~;%*\/\.]+$/i
+    regex.test url
+
+
+parseUrl = (html) ->
+    doc = jsdom.jsdom html
+    wnd = doc.createWindow()
+    img = wnd.document.getElementsByClassName("the_photo")
+    img = wnd.document.getElementsByTagName("img") unless img.length
+    url = img[0].src
+    wnd.close()
+
+    return false if url.indexOf("/nude/") > -1
+    throw "Url is invalid" unless isValid url
+
+    regex = /(\d+)\.jpg$/
+    resolution = parseInt regex.exec(url)[1]
+    url = url.replace regex, "5.jpg" if resolution < 5
+    url
+
+
 fetch = (callback) ->
     [response, options] = ["", makeOptions fetchedPages + 1]
 
@@ -39,7 +64,7 @@ fetch = (callback) ->
         res.on "data", (chunk) -> response += chunk.toString()
         res.on "end", -> callback null, response
 
-    req.on "error", _.partialRight handle, "Fetching error", callback
+    req.on "error", _.partialRight handle, "Fetching", callback
 
 
 parse = (response, callback) ->
@@ -53,14 +78,35 @@ parse = (response, callback) ->
         callback null, photos
 
     catch err
-        handle err, "Parsing error", callback
+        handle err, "Parsing", callback
 
 
 findLinks = (photos, callback) ->
-    callback null, _.map photos, (value, key, list) ->
-        regex = /<img.*?src=['"](.*?)['"]/gm
-        url = (regex.exec value.html)[1]
-        id: value.id.toString(), url: url.replace /\d\.jpg$/, "5.jpg"
+    try
+        callback null, _.map photos, (value) ->
+            id: value.id.toString(), url: parseUrl value.html
+    catch err
+        handle err, "Finding links", callback
+
+
+findNudeLinks = (links, callback) ->
+    nude = _.filter links, (img) -> not img.url
+
+    async.each nude, (img, found) ->
+        response = ""
+
+        req = http.get "http://500px.com/photo/#{img.id}", (res) ->
+            res.on "data", (chunk) -> response += chunk.toString()
+            res.on "end", ->
+                try
+                    img.url = parseUrl response
+                    throw "Cannot parse url for nude image" unless img.url
+                    found null
+                catch err
+                    handle err, "Finding nude link", found
+
+        req.on "error", _.partialRight handle, "Downloading page with nude link", found
+    , -> callback null, links
 
 
 download = (links, callback) ->
@@ -69,31 +115,21 @@ download = (links, callback) ->
         return downloaded null if fs.existsSync fileName
 
         images.get img.url, fileName, (err, result) ->
-            if err? then return fetchNude img, downloaded
             total++
-            downloaded null
+            downloaded err
     , callback
-
-fetchNude = (img, callback) ->
-    response = ""
-
-    req = http.get "http://500px.com/photo/#{img.id}", (res) ->
-        res.on "data", (chunk) -> response += chunk.toString()
-        res.on "end", ->
-            try
-                regex = /['"](.*?\d\.jpg)['"]/gm
-                img.url = (regex.exec response)[1].replace /\d\.jpg$/, "5.jpg"
-                download [img], callback
-            catch err
-                handle err, "Fetch nude error", callback
-
-    req.on "error", _.partialRight handle, "Downloading nude error", callback
 
 
 handle = (err, where, callback) ->
-    util.debug where
-    util.debug util.inspect err
+    util.debug """EXCEPTION:
+                  During: #{where}
+                  Details: #{util.inspect err}"""
     callback err
+
+
+jsdom.defaultDocumentFeatures =
+    FetchExternalResources:   no
+    ProcessExternalResources: no
 
 
 start()

@@ -7,7 +7,8 @@
   "dependencies": {
     "async": "*",
     "http-get": "*",
-    "lodash": "*"
+    "lodash": "*",
+    "jsdom": "*"
   },
   "description": "Tiny script for those of you who want to download favorite photos from 500px.com",
   "name": "500px-favorites-download",
