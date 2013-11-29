@@ -8,7 +8,7 @@
     "async": "*",
     "http-get": "*",
     "lodash": "*",
-    "jsdom": "*"
+    "cheerio": "*"
   },
   "description": "Tiny script for those of you who want to download favorite photos from 500px.com",
   "name": "500px-favorites-download",

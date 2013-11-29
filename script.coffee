@@ -1,11 +1,11 @@
-_      = require 'lodash'
-http   = require 'http'
-util   = require 'util'
-async  = require 'async'
-images = require 'http-get'
-jsdom  = require 'jsdom'
-path   = require 'path'
-fs     = require 'fs'
+_       = require 'lodash'
+http    = require 'http'
+util    = require 'util'
+async   = require 'async'
+images  = require 'http-get'
+cheerio = require 'cheerio'
+path    = require 'path'
+fs      = require 'fs'
 
 [username, savePath] = ["z0rch", "D:\\Dropbox\\Photos\\500px favorites"]
 [fetchedPages, totalPages, photos, total] = [0, null, [], 0]
@@ -41,12 +41,10 @@ isValid = (url) ->
 
 
 parseUrl = (html) ->
-    doc = jsdom.jsdom html
-    wnd = doc.createWindow()
-    img = wnd.document.getElementsByClassName("the_photo")
-    img = wnd.document.getElementsByTagName("img") unless img.length
-    url = img[0].src
-    wnd.close()
+    $ = cheerio.load html
+    img = $(".the_photo")
+    img = $("img") unless img.length
+    url = img.attr("src")
 
     return false if url.indexOf("/nude/") > -1
     throw "Url is invalid" unless isValid url
@@ -125,11 +123,6 @@ handle = (err, where, callback) ->
                   During: #{where}
                   Details: #{util.inspect err}"""
     callback err
-
-
-jsdom.defaultDocumentFeatures =
-    FetchExternalResources:   no
-    ProcessExternalResources: no
 
 
 start()
